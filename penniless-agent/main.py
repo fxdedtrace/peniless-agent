@@ -508,16 +508,20 @@ STATUS_HEADER = (
 
 def _split_status(text: str) -> tuple[str, list[str]]:
     """Return (preamble, entries) where entries are newest-first markdown
-    chunks starting with '## Run'."""
-    if not text.startswith("# Penniless Agent"):
-        return "", [text] if text.strip() else []
+    chunks each starting with a '## Run' heading.
+
+    The preamble is ONLY the leading '# ...' title, blockquote lines and
+    blank lines BEFORE the first entry — the scan must stop at the first
+    '## Run ' heading, never consume headings belonging to entries.
+    """
     lines = text.split("\n")
-    i = 0
-    while i < len(lines) and (lines[i].startswith("#") or lines[i].startswith(">") or not lines[i].strip()):
-        i += 1
-    preamble, body = "\n".join(lines[:i]), "\n".join(lines[i:])
-    parts = [p for p in re.split(r"\n(?=## Run )", body) if p.strip()]
-    return preamble, parts
+    for i, line in enumerate(lines):
+        if line.startswith("## Run "):
+            preamble, body = "\n".join(lines[:i]).rstrip(), "\n".join(lines[i:])
+            parts = [p for p in re.split(r"\n(?=## Run )", body) if p.strip()]
+            return preamble, parts
+    # No entries found (fresh file or bare text): everything is preamble.
+    return text.rstrip(), []
 
 
 def append_status(entry_md: str) -> None:
