@@ -1,0 +1,9 @@
+# local secrets — never commit
+.env
+
+# python
+__pycache__/
+*.pyc
+
+# (status.md, solutions/, run_state.json are intentionally COMMITTED —
+#  they are the agent's public run log.)
